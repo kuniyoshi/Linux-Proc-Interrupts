@@ -35,9 +35,7 @@ sub parse_lines {
     for my $line ( @lines ) {
         if ( $line =~ m{\A \d+ : }msx ) {
             my( $num, $counts_ref, $type, $devices_ref ) = parse_per_hardware_line( $line, scalar @cpus );
-            $interrupt{ $type }{num} = $num;
-            @{ $interrupt{ $type } }{ @cpus } = @{ $counts_ref };
-            $interrupt{ $type }{devices} = $devices_ref;
+            @{ $interrupt{ $num } }{ qw( counts type devices ) } = ( $counts_ref, $type, $devices_ref );
         }
         elsif ( $line =~ m{\A (?:ERR|MIS): }msx ) {
             my( $id, $count ) = split m{:\s+}, $line;
@@ -45,8 +43,7 @@ sub parse_lines {
         }
         else {
             my( $id, $counts_ref, $description ) = parse_global( $line, scalar @cpus );
-            $interrupt{ $id }{description} = $description;
-            @{ $interrupt{ $id } }{ @cpus } = @{ $counts_ref };
+            @{ $interrupt{ $id } }{ qw( counts description ) } = ( $counts_ref, $description );
         }
     }
 
@@ -54,3 +51,17 @@ sub parse_lines {
 }
 
 1;
+
+__END__
+{
+    $id => {
+        counts   => [ @cpus ],
+        type    => $type,
+        devices => [ @devices ],
+    },
+    $device_global_id => {
+        counts      => [ @cpus ],
+        description => $description,
+    },
+    $global_id => $count,
+};
